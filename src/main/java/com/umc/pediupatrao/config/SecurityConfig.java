@@ -50,6 +50,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/login", "/css/**", "/dist/**", "/plugins/**", "/js/**", "/images/**").permitAll()
                         .requestMatchers("/api/usuarios/**").hasRole("ADMIN") // Dupla autenticação para somente ADMIN conseguir acessar
+                        .requestMatchers("/usuarios", "/usuarios/**").hasRole("ADMIN")
+                        .requestMatchers("/configuracoes", "/configuracoes/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
@@ -61,6 +63,7 @@ public class SecurityConfig {
                         .logoutUrl("/logout")
                         .logoutSuccessUrl("/login?logout")
                         .permitAll()
+                        .logoutRequestMatcher(new org.springframework.security.web.util.matcher.AntPathRequestMatcher("/logout", "GET"))
                 );
 
         return http.build();

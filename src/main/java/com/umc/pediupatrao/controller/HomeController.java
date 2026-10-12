@@ -36,6 +36,9 @@ public class HomeController {
 
     @Autowired
     private UsuarioService usuarioService;
+    
+    @Autowired
+    private com.umc.pediupatrao.repository.AuditoriaRepository auditoriaRepository;
 
     @GetMapping("/login")
     public String login() {
@@ -43,7 +46,15 @@ public class HomeController {
     }
 
     @GetMapping("/")
-    public String home(Model model) {
+    public String home(Model model, org.springframework.security.core.Authentication auth) {
+        
+        if (auth != null) {
+            System.out.println("\n=========================================");
+            System.out.println("USUÁRIO LOGADO: " + auth.getName());
+            System.out.println("PERMISSÕES DO SPRING: " + auth.getAuthorities());
+            System.out.println("=========================================\n");
+        }
+        
         model.addAttribute("content", "home :: content");
         return "layout";
     }
@@ -116,6 +127,8 @@ public class HomeController {
     public String pedidos(Model model) {
         List<Pedido> pedidos = pedidoService.listarPedidos();
         model.addAttribute("pedidos", pedidos);
+        
+        model.addAttribute("clientes", clienteService.listarClientes());
         model.addAttribute("content", "pedidos :: content");
         log.info("Carregando fragmento: pedidos :: content");
         return "layout";
@@ -204,5 +217,12 @@ public class HomeController {
     @GetMapping("/admin")
     public String admin() {
         return "admin";
+    }
+    
+    @GetMapping("/auditoria")
+    public String telaAuditoria(Model model) {
+        model.addAttribute("auditorias", auditoriaRepository.findAll());
+        model.addAttribute("content", "auditoria :: content");
+        return "layout";
     }
 }

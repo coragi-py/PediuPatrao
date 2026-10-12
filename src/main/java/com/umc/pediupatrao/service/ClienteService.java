@@ -13,15 +13,17 @@ public class ClienteService {
     @Autowired
     private ClienteRepository clienteRepository;
 
+    @Autowired
+    private AuditoriaService auditoriaService; // Injetamos a Auditoria aqui
+
     public Cliente novoCliente(Cliente cliente) {
-        return clienteRepository.save(cliente);
+        return salvar(cliente); // Redireciona para o salvar que já tem a auditoria embutida
     }
 
     public List<Cliente> listarClientes() {
         return clienteRepository.findAll();
     }
 
-    // Método para excluir cliente
     public void excluir(String id) {
         clienteRepository.deleteById(id);
     }
@@ -30,20 +32,43 @@ public class ClienteService {
         return clienteRepository.findById(id);
     }
 
-    // Método para salvar um novo cliente ou atualizar um cliente existente
+    // Método principal que fará a interceptação
     public Cliente salvar(Cliente cliente) {
-        // Se o cliente não tem ID (novo cliente), salva como novo
-        if (cliente.getId() == null) {
-            return clienteRepository.save(cliente);  // Cria um novo cliente
-        } // Se já tem ID (cliente existente), atualiza
+        // 1. É uma INCLUSÃO (Novo Cliente)?
+        if (cliente.getId() == null || cliente.getId().trim().isEmpty()) {
+            Cliente salvo = clienteRepository.save(cliente);
+            auditoriaService.registrar("INCLUSÃO DE CLIENTE", "Cliente", salvo.getId(), "Todos", "N/A", "Novo Cadastro", "Registro inicial de cliente");
+            return salvo;
+        } 
+        // 2. É uma ALTERAÇÃO (Cliente já existe)?
         else {
-            // Verifica se o cliente existe antes de atualizar
-            if (clienteRepository.existsById(cliente.getId())) {
-                return clienteRepository.save(cliente);  // Atualiza o cliente existente
+            Optional<Cliente> existenteOpt = clienteRepository.findById(cliente.getId());
+            
+            if (existenteOpt.isPresent()) {
+                Cliente existente = existenteOpt.get();
+                
+                // Compara os campos sensíveis exigidos e audita se houver mudança
+                auditarAlteracao(existente.getId(), "telefone", existente.getTelefone(), cliente.getTelefone());
+                auditarAlteracao(existente.getId(), "logradouro", existente.getLogradouro(), cliente.getLogradouro());
+                auditarAlteracao(existente.getId(), "numero", existente.getNumero(), cliente.getNumero());
+                auditarAlteracao(existente.getId(), "cep", existente.getCep(), cliente.getCep());
+                auditarAlteracao(existente.getId(), "bairro", existente.getBairro(), cliente.getBairro());
+                auditarAlteracao(existente.getId(), "cidade", existente.getCidade(), cliente.getCidade());
+                
+                return clienteRepository.save(cliente);
             } else {
                 throw new IllegalArgumentException("Cliente não encontrado para atualização.");
             }
         }
     }
 
+    // Método auxiliar para não repetir código
+    private void auditarAlteracao(String idCliente, String campo, String valorAntigo, String valorNovo) {
+        valorAntigo = (valorAntigo == null) ? "" : valorAntigo;
+        valorNovo = (valorNovo == null) ? "" : valorNovo;
+
+        if (!valorAntigo.equals(valorNovo)) {
+            auditoriaService.registrar("ALTERAÇÃO DE CLIENTE", "Cliente", idCliente, campo, valorAntigo, valorNovo, "Atualização cadastral");
+        }
+    }
 }

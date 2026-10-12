@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <title>Lista de Pedidos</title>
 </head>
@@ -11,6 +11,9 @@
         <h2 class="fw-bold mb-0">
             <i class="bi bi-bag me-2 text-primary"></i>Pedidos
         </h2>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNovoPedido" sec:authorize="hasAnyRole('ATENDENTE', 'GERENTE')">
+            <i class="bi bi-plus-circle me-1"></i> Novo Pedido
+        </button>
     </div>
 
     <!-- Mensagens de feedback -->
@@ -19,58 +22,227 @@
         <span th:text="${sucesso}"></span>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
-    <div class="alert alert-danger alert-dismissible fade show" th:if="${erro}" role="alert">
-        <i class="bi bi-exclamation-triangle-fill me-2"></i>
-        <span th:text="${erro}"></span>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
 
-    <!-- Tabela -->
+    <!-- Tabela de Pedidos -->
     <div class="card shadow-sm">
-        <div class="card-body p-0">
+        <div class="card-body p-0 table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-dark">
                     <tr>
-                        <th class="ps-4">ID</th>
-                        <th>Cliente ID</th>
-                        <th>Tipo de Pizza</th>
-                        <th>Sabor</th>
-                        <th>Quantidade</th>
+                        <th class="ps-4">ID / Cliente</th>
+                        <th>Itens (Sabor x Qtd)</th>
                         <th>Status</th>
+                        <th>Valor S/ Desc</th>
+                        <th>Desconto</th>
+                        <th>Valor Final</th>
+                        <th>Ações</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <!-- Lista vazia -->
                     <tr th:if="${#lists.isEmpty(pedidos)}">
-                        <td colspan="6" class="text-center text-muted py-5">
-                            <i class="bi bi-inbox fs-3 d-block mb-2"></i>
-                            Nenhum pedido encontrado.
+                        <td colspan="7" class="text-center text-muted py-5">
+                            <i class="bi bi-inbox fs-3 d-block mb-2"></i> Nenhum pedido encontrado.
                         </td>
                     </tr>
-                    <!-- Linhas -->
-                    <tr th:each="pedido : ${pedidos}">
-                        <td class="ps-4 text-muted" th:text="${pedido.id}"></td>
-                        <td th:text="${pedido.clienteId}"></td>
-                        <td th:text="${pedido.tipoPizza}"></td>
-                        <td th:text="${pedido.sabor}"></td>
-                        <td th:text="${pedido.quantidade}"></td>
+                    <tr th:each="p : ${pedidos}">
+                        <td class="ps-4">
+                            <span class="text-muted small" th:text="${p.id}"></span><br>
+                            <strong th:text="${p.clienteId}"></strong>
+                        </td>
+                        <td>
+                            <ul class="list-unstyled mb-0 small" th:if="${p.itens != null}">
+                                <li th:each="item : ${p.itens}" th:text="${item.sabor + ' (x' + item.quantidade + ')'}"></li>
+                            </ul>
+                        </td>
                         <td>
                             <span class="badge"
-                                  th:classappend="${pedido.status == 'ENTREGUE'} ? 'bg-success' :
-                                                  (${pedido.status == 'CANCELADO'} ? 'bg-danger' :
-                                                  (${pedido.status == 'EM_PREPARO'} ? 'bg-warning text-dark' : 'bg-secondary'))"
-                                  th:text="${pedido.status}">
+                                  th:classappend="${p.status == 'FINALIZADO'} ? 'bg-success' :
+                                                  (${p.status == 'CANCELADO'} ? 'bg-danger' :
+                                                  (${p.status == 'RECEBIDO'} ? 'bg-primary' :
+                                                  (${p.status == 'EM PREPARAÇÃO'} ? 'bg-warning text-dark' : 'bg-info text-dark')))"
+                                  th:text="${p.status}">
                             </span>
+                        </td>
+                        <td th:text="${'R$ ' + #numbers.formatDecimal((p.valorTotal + p.desconto), 1, 'COMMA', 2, 'POINT')}"></td>
+                        <td class="text-danger" th:text="${'R$ ' + #numbers.formatDecimal(p.desconto, 1, 'COMMA', 2, 'POINT')}"></td>
+                        <td class="fw-bold text-success" th:text="${'R$ ' + #numbers.formatDecimal(p.valorTotal, 1, 'COMMA', 2, 'POINT')}"></td>
+                        <td>
+                            <button class="btn btn-sm btn-success my-1" 
+                                    th:data-id="${p.id}" 
+                                    th:data-status="${p.status}" 
+                                    onclick="avancarStatus(this.getAttribute('data-id'), this.getAttribute('data-status'))" 
+                                    sec:authorize="hasAnyRole('ATENDENTE', 'GERENTE')">
+                                <i class="bi bi-arrow-right-circle"></i> Avançar Status
+                            </button>
+                            
+                            <button class="btn btn-sm btn-warning my-1" 
+                                    th:data-id="${p.id}" 
+                                    onclick="aplicarDesconto(this.getAttribute('data-id'))" 
+                                    sec:authorize="hasAnyRole('ATENDENTE', 'GERENTE')">
+                                <i class="bi bi-tag"></i> Desconto
+                            </button>
+                            
+                            <button class="btn btn-sm btn-danger my-1" 
+                                    th:data-id="${p.id}" 
+                                    onclick="cancelarPedido(this.getAttribute('data-id'))" 
+                                    sec:authorize="hasAnyRole('ATENDENTE', 'GERENTE')">
+                                <i class="bi bi-x-circle"></i> Cancelar
+                            </button>
                         </td>
                     </tr>
                 </tbody>
             </table>
         </div>
-        <div class="card-footer text-muted small" th:if="${!#lists.isEmpty(pedidos)}">
-            Total: <strong th:text="${#lists.size(pedidos)}"></strong> pedido(s)
-        </div>
     </div>
 
+    <!-- MODAL DE CADASTRO DE NOVO PEDIDO -->
+    <div class="modal fade" id="modalNovoPedido" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header bg-dark text-white">
+            <h5 class="modal-title"><i class="bi bi-cart-plus"></i> Registrar Novo Pedido</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="formNovoPedido">
+                
+                <!-- DROPDOWN DE CLIENTES COM ATALHO DE NOVO CADASTRO -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Cliente</label>
+                    <div class="input-group">
+                        <select class="form-select" id="clienteId" required>
+                            <option value="" disabled selected>Selecione um cliente...</option>
+                            <option value="Cliente Balcão (Avulso)" class="fw-bold">🚶 Cliente Balcão (Avulso)</option>
+                            <!-- Thymeleaf carrega os clientes aqui -->
+                            <option th:each="c : ${clientes}" th:value="${c.nome}" th:text="${c.nome + ' (' + c.telefone + ')'}"></option>
+                        </select>
+                        <!-- Botão que direciona para a tela de clientes -->
+                        <a href="/clientes/novo" class="btn btn-outline-secondary" title="Cadastrar Novo Cliente">
+                            <i class="bi bi-person-plus"></i> Novo
+                        </a>
+                    </div>
+                </div>
+                
+                <hr>
+                <h6 class="fw-bold mb-3">Item do Pedido</h6>
+                <div class="mb-3">
+                    <label class="form-label">Sabor / Produto</label>
+                    <input type="text" class="form-control" id="itemSabor" placeholder="Ex: Pizza Calabresa" required>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Quantidade</label>
+                        <input type="number" class="form-control" id="itemQtd" min="1" value="1" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Preço Unitário (R$)</label>
+                        <input type="number" step="0.01" class="form-control" id="itemPreco" placeholder="45.00" required>
+                    </div>
+                </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-primary" onclick="salvarNovoPedido()">Confirmar Pedido</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCRIPTS MÁGICOS -->
+    <script th:inline="javascript">
+        const csrfToken = /*[[${_csrf.token}]]*/ '';
+        const csrfHeader = /*[[${_csrf.headerName}]]*/ '';
+        const usuarioEhGerente = /*[[${#authorization.expression('hasAnyRole(''GERENTE'', ''ADMIN'')')}]]*/ false;
+
+        async function requestAPI(url, method, body = null) {
+            const config = { method: method, headers: { [csrfHeader]: csrfToken } };
+            if (body) {
+                config.headers['Content-Type'] = 'application/json';
+                config.body = JSON.stringify(body);
+            }
+            try {
+                const res = await fetch(url, config);
+                if(res.ok) window.location.reload();
+                else {
+                    const errorData = await res.json().catch(() => ({}));
+                    alert("Erro: " + (errorData.message || "Ação rejeitada pelas regras de negócio."));
+                }
+            } catch(e) {
+                alert("Falha na comunicação com o servidor.");
+            }
+        }
+
+        // Envia o JSON pegando a lista suspensa (Select)
+        function salvarNovoPedido() {
+            const cliente = document.getElementById('clienteId').value;
+            const sabor = document.getElementById('itemSabor').value;
+            const qtd = parseInt(document.getElementById('itemQtd').value);
+            const preco = parseFloat(document.getElementById('itemPreco').value);
+
+            if(!cliente || !sabor || !qtd || !preco) {
+                alert("Por favor, preencha todos os campos do pedido (Selecione o Cliente).");
+                return;
+            }
+
+            const novoPedidoPayload = {
+                clienteId: cliente,
+                itens: [
+                    { sabor: sabor, quantidade: qtd, precoUnitario: preco }
+                ]
+            };
+
+            requestAPI('/api/pedidos', 'POST', novoPedidoPayload);
+        }
+
+        function avancarStatus(id, statusAtual) {
+            let novoStatus = "";
+            if (statusAtual === 'RECEBIDO') novoStatus = 'EM PREPARAÇÃO';
+            else if (statusAtual === 'EM PREPARAÇÃO') novoStatus = 'PRONTO';
+            else if (statusAtual === 'PRONTO') {
+                let opcao = prompt("Digite '1' para SAIU PARA ENTREGA ou '2' para RETIRADO:");
+                if (opcao === '1') novoStatus = 'SAIU PARA ENTREGA';
+                else if (opcao === '2') novoStatus = 'RETIRADO';
+                else return;
+            }
+            else if (statusAtual === 'SAIU PARA ENTREGA' || statusAtual === 'RETIRADO') novoStatus = 'FINALIZADO';
+            else { alert('Pedido concluído ou cancelado não pode ser alterado!'); return; }
+
+            requestAPI('/api/pedidos/' + id + '/status?status=' + novoStatus, 'PUT');
+        }
+
+        function aplicarDesconto(id) {
+            const perc = prompt("Informe a porcentagem de desconto (máx 20%):");
+            if (!perc) return;
+
+            let url = '/api/pedidos/' + id + '/desconto?percentual=' + perc;
+            if (!usuarioEhGerente) {
+                alert("Esta é uma ação restrita. Chame um GERENTE para autorizar.");
+                const usr = prompt("Autorização - Digite o USUÁRIO do Gerente:");
+                if (!usr) return;
+                const pwd = prompt("Autorização - Digite a SENHA do Gerente:");
+                if (!pwd) return;
+                url += '&usernameGerente=' + encodeURIComponent(usr) + '&senhaGerente=' + encodeURIComponent(pwd);
+            }
+            requestAPI(url, 'PUT');
+        }
+
+        function cancelarPedido(id) {
+            const just = prompt("Informe a justificativa do cancelamento:");
+            if (!just) return;
+
+            let url = '/api/pedidos/' + id + '/cancelar?justificativa=' + encodeURIComponent(just);
+            if (!usuarioEhGerente) {
+                alert("Esta é uma ação restrita. Chame um GERENTE para autorizar.");
+                const usr = prompt("Autorização - Digite o USUÁRIO do Gerente:");
+                if (!usr) return;
+                const pwd = prompt("Autorização - Digite a SENHA do Gerente:");
+                if (!pwd) return;
+                url += '&usernameGerente=' + encodeURIComponent(usr) + '&senhaGerente=' + encodeURIComponent(pwd);
+            }
+            requestAPI(url, 'PUT');
+        }
+    </script>
 </div>
 
 </body>

@@ -2,6 +2,7 @@ package com.umc.pediupatrao.controller;
 
 import com.umc.pediupatrao.entity.Usuario;
 import com.umc.pediupatrao.service.UsuarioService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

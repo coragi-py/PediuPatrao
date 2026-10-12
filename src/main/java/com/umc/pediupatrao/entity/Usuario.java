@@ -9,7 +9,7 @@ public class Usuario {
     private String id;
     private String username; // Nome de usuário para login
     private String password; // Senha criptografada
-    private String role;     // Papel do usuário, como ADMIN ou USER
+    private String role;     // Papel do usuário, como ADMIN, ATENTENDE ou GERENTE
 
     public String getId() {
         return id;
