@@ -12,7 +12,22 @@ Este repositório contém a evolução da aplicação **PediuPatrão**, um siste
 
 ---
 
-## 🚀 Instruções de Execução
+## Configuração de Segurança e Variáveis de Ambiente (.env)
+
+Para garantir as boas práticas de engenharia de software e a segurança das credenciais, este projeto não expõe senhas diretamente no código-fonte (`application.properties`). Utilizamos o padrão de variáveis de ambiente.
+
+Para rodar o projeto em sua máquina ou testar a conexão, siga estes passos:
+
+1. Na raiz do projeto (na mesma pasta onde se encontra o arquivo `pom.xml`), crie um arquivo chamado exatamente **`.env`**.
+2. Cole o conteúdo abaixo dentro do arquivo `.env`, substituindo as informações pelas credenciais reais do seu MongoDB Atlas:
+
+   ```env
+   MONGO_URI=mongodb+srv://<seu-usuario>:<sua-senha>@<seu-cluster>.mongodb.net/?retryWrites=true&w=majority&appName=PediuPatrao
+   SPRING_SECURITY_PASSWORD=<sua-senha-segura>
+
+---
+
+## Instruções de Execução
 
 Para rodar o projeto localmente em sua máquina, siga os passos abaixo:
 
@@ -32,7 +47,7 @@ Para rodar o projeto localmente em sua máquina, siga os passos abaixo:
 
 ---
 
-## ✅ Requisitos Implementados
+## Requisitos Implementados
 
 * **RF01 - Controle de Usuários e Permissões:** Implementação de 3 perfis distintos (`ADMIN`, `GERENTE`, `ATENDENTE`). O acesso foi bloqueado nativamente no backend via `@PreAuthorize`, além do controle visual no HTML. A gestão de contas é exclusiva do `ADMIN`.
 * **RF02 - Evolução do Cadastro de Pedidos:** Reestruturação da entidade `Pedido` para receber múltiplos itens (`ItemPedido`). O cálculo do valor final é realizado estritamente no servidor, ignorando valores arbitrários do client-side.
@@ -42,7 +57,7 @@ Para rodar o projeto localmente em sua máquina, siga os passos abaixo:
 
 ---
 
-## 🔧 Principais Alterações Realizadas no Projeto Base
+## Principais Alterações Realizadas no Projeto Base
 
 1. **Correção de Brechas de Segurança (`SecurityConfig` e `UsuarioDetailsService`):**
    * Habilitação da anotação `@EnableMethodSecurity` para garantir bloqueios nas APIs.

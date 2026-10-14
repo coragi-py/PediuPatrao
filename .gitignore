@@ -71,7 +71,6 @@ ehthumbs.db
 Thumbs.db
 
 # ==========================================
-# Arquivos Específicos do Projeto
+# Arquivos de variáveis de ambiente
 # ==========================================
-# Descomente a linha abaixo caso o customs.json seja apenas de uso local e não deva ser versionado:
-# customs.json
+.env
