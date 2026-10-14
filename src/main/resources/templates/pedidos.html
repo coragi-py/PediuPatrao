@@ -32,6 +32,7 @@
                         <th class="ps-4">ID / Cliente</th>
                         <th>Itens (Sabor x Qtd)</th>
                         <th>Status</th>
+                        <th>Datas e Responsáveis</th>
                         <th>Valor S/ Desc</th>
                         <th>Desconto</th>
                         <th>Valor Final</th>
@@ -40,7 +41,7 @@
                 </thead>
                 <tbody>
                     <tr th:if="${#lists.isEmpty(pedidos)}">
-                        <td colspan="7" class="text-center text-muted py-5">
+                        <td colspan="8" class="text-center text-muted py-5">
                             <i class="bi bi-inbox fs-3 d-block mb-2"></i> Nenhum pedido encontrado.
                         </td>
                     </tr>
@@ -51,7 +52,7 @@
                         </td>
                         <td>
                             <ul class="list-unstyled mb-0 small" th:if="${p.itens != null}">
-                                <li th:each="item : ${p.itens}" th:text="${item.sabor + ' (x' + item.quantidade + ')'}"></li>
+                                <li th:each="item : ${p.itens}" th:text="|${item.sabor} (x${item.quantidade})|"></li>
                             </ul>
                         </td>
                         <td>
@@ -63,26 +64,47 @@
                                   th:text="${p.status}">
                             </span>
                         </td>
-                        <td th:text="${'R$ ' + #numbers.formatDecimal((p.valorTotal + p.desconto), 1, 'COMMA', 2, 'POINT')}"></td>
-                        <td class="text-danger" th:text="${'R$ ' + #numbers.formatDecimal(p.desconto, 1, 'COMMA', 2, 'POINT')}"></td>
-                        <td class="fw-bold text-success" th:text="${'R$ ' + #numbers.formatDecimal(p.valorTotal, 1, 'COMMA', 2, 'POINT')}"></td>
+                        
+                        <!-- DADOS DE REGISTRO E SAÍDA -->
+                        <td class="small">
+                            <!-- Entrada -->
+                            <div class="mb-1">
+                                <i class="bi bi-box-arrow-in-right text-primary" title="Data de Entrada"></i>
+                                <span class="fw-bold" th:if="${p.dataHoraEntrada != null}" th:text="${#temporals.format(p.dataHoraEntrada, 'dd/MM/yyyy HH:mm')}"></span>
+                                <span class="fw-bold text-muted" th:unless="${p.dataHoraEntrada != null}">-</span>
+                                <br>
+                                <span class="text-muted fst-italic" th:if="${p.responsavelRegistro != null}" th:text="|Criado por: ${p.responsavelRegistro}|"></span>
+                            </div>
+                            <!-- Saída -->
+                            <div th:if="${p.dataHoraSaida != null}" class="mt-2 border-top pt-1">
+                                <i class="bi bi-box-arrow-right text-success" title="Data de Saída"></i>
+                                <span class="fw-bold" th:text="${#temporals.format(p.dataHoraSaida, 'dd/MM/yyyy HH:mm')}"></span>
+                                <br>
+                                <span class="text-muted fst-italic" th:if="${p.responsavelSaida != null}" th:text="|Liberado por: ${p.responsavelSaida}|"></span>
+                            </div>
+                        </td>
+
+                        <td th:text="${'R$ ' + #numbers.formatDecimal(((p.valorTotal ?: 0.0) + (p.desconto ?: 0.0)), 1, 'COMMA', 2, 'POINT')}"></td>
+                        <td class="text-danger" th:text="${'R$ ' + #numbers.formatDecimal((p.desconto ?: 0.0), 1, 'COMMA', 2, 'POINT')}"></td>
+                        <td class="fw-bold text-success" th:text="${'R$ ' + #numbers.formatDecimal((p.valorTotal ?: 0.0), 1, 'COMMA', 2, 'POINT')}"></td>
+                        
                         <td>
-                            <button class="btn btn-sm btn-success my-1" 
+                            <button class="btn btn-sm btn-success my-1 w-100 text-start" 
                                     th:data-id="${p.id}" 
                                     th:data-status="${p.status}" 
                                     onclick="avancarStatus(this.getAttribute('data-id'), this.getAttribute('data-status'))" 
                                     sec:authorize="hasAnyRole('ATENDENTE', 'GERENTE')">
-                                <i class="bi bi-arrow-right-circle"></i> Avançar Status
+                                <i class="bi bi-arrow-right-circle"></i> Avançar
                             </button>
                             
-                            <button class="btn btn-sm btn-warning my-1" 
+                            <button class="btn btn-sm btn-warning my-1 w-100 text-start" 
                                     th:data-id="${p.id}" 
                                     onclick="aplicarDesconto(this.getAttribute('data-id'))" 
                                     sec:authorize="hasAnyRole('ATENDENTE', 'GERENTE')">
                                 <i class="bi bi-tag"></i> Desconto
                             </button>
                             
-                            <button class="btn btn-sm btn-danger my-1" 
+                            <button class="btn btn-sm btn-danger my-1 w-100 text-start" 
                                     th:data-id="${p.id}" 
                                     onclick="cancelarPedido(this.getAttribute('data-id'))" 
                                     sec:authorize="hasAnyRole('ATENDENTE', 'GERENTE')">
@@ -105,18 +127,14 @@
           </div>
           <div class="modal-body">
             <form id="formNovoPedido">
-                
-                <!-- DROPDOWN DE CLIENTES COM ATALHO DE NOVO CADASTRO -->
                 <div class="mb-3">
                     <label class="form-label fw-bold">Cliente</label>
                     <div class="input-group">
                         <select class="form-select" id="clienteId" required>
                             <option value="" disabled selected>Selecione um cliente...</option>
                             <option value="Cliente Balcão (Avulso)" class="fw-bold">🚶 Cliente Balcão (Avulso)</option>
-                            <!-- Thymeleaf carrega os clientes aqui -->
-                            <option th:each="c : ${clientes}" th:value="${c.nome}" th:text="${c.nome + ' (' + c.telefone + ')'}"></option>
+                            <option th:if="${clientes != null}" th:each="c : ${clientes}" th:value="${c.nome}" th:text="|${c.nome} (${c.telefone})|"></option>
                         </select>
-                        <!-- Botão que direciona para a tela de clientes -->
                         <a href="/clientes/novo" class="btn btn-outline-secondary" title="Cadastrar Novo Cliente">
                             <i class="bi bi-person-plus"></i> Novo
                         </a>
@@ -149,7 +167,6 @@
       </div>
     </div>
 
-    <!-- SCRIPTS MÁGICOS -->
     <script th:inline="javascript">
         const csrfToken = /*[[${_csrf.token}]]*/ '';
         const csrfHeader = /*[[${_csrf.headerName}]]*/ '';
@@ -173,7 +190,6 @@
             }
         }
 
-        // Envia o JSON pegando a lista suspensa (Select)
         function salvarNovoPedido() {
             const cliente = document.getElementById('clienteId').value;
             const sabor = document.getElementById('itemSabor').value;
@@ -181,7 +197,7 @@
             const preco = parseFloat(document.getElementById('itemPreco').value);
 
             if(!cliente || !sabor || !qtd || !preco) {
-                alert("Por favor, preencha todos os campos do pedido (Selecione o Cliente).");
+                alert("Por favor, preencha todos os campos do pedido.");
                 return;
             }
 
@@ -208,7 +224,8 @@
             else if (statusAtual === 'SAIU PARA ENTREGA' || statusAtual === 'RETIRADO') novoStatus = 'FINALIZADO';
             else { alert('Pedido concluído ou cancelado não pode ser alterado!'); return; }
 
-            requestAPI('/api/pedidos/' + id + '/status?status=' + novoStatus, 'PUT');
+            // ADICIONADO: encodeURIComponent para proteger a URL contra os espaços!
+            requestAPI('/api/pedidos/' + id + '/status?status=' + encodeURIComponent(novoStatus), 'PUT');
         }
 
         function aplicarDesconto(id) {

@@ -81,7 +81,7 @@ public class Pedido {
         this.dataHoraEntrada = dataHoraEntrada;
     }
     
-    public String getResponsasvelSaida() {
+    public String getResponsavelSaida() {
         return responsavelSaida;
     }
     public void setResponsavelSaida(String responsavelSaida) {
