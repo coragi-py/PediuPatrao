@@ -142,20 +142,21 @@
                 </div>
                 
                 <hr>
-                <h6 class="fw-bold mb-3">Item do Pedido</h6>
+                <h6 class="fw-bold mb-3">Item do Pedido (Preço calculado no Servidor)</h6>
                 <div class="mb-3">
-                    <label class="form-label">Sabor / Produto</label>
-                    <input type="text" class="form-control" id="itemSabor" placeholder="Ex: Pizza Calabresa" required>
+                    <label class="form-label">Produto do Catálogo</label>
+                    <select class="form-select" id="itemSabor" required>
+                        <option value="" disabled selected>Selecione um produto cadastrado...</option>
+                        <option th:if="${produtos != null}" th:each="prod : ${produtos}" 
+                                th:value="${prod.nome}" 
+                                th:text="|${prod.nome} - R$ ${#numbers.formatDecimal(prod.preco, 1, 'COMMA', 2, 'POINT')}|">
+                        </option>
+                    </select>
+                    <div class="form-text">Caso a lista esteja vazia, cadastre um produto na aba Produtos.</div>
                 </div>
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Quantidade</label>
-                        <input type="number" class="form-control" id="itemQtd" min="1" value="1" required>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Preço Unitário (R$)</label>
-                        <input type="number" step="0.01" class="form-control" id="itemPreco" placeholder="45.00" required>
-                    </div>
+                <div class="mb-3">
+                    <label class="form-label">Quantidade</label>
+                    <input type="number" class="form-control" id="itemQtd" min="1" value="1" required>
                 </div>
             </form>
           </div>
@@ -170,7 +171,7 @@
     <script th:inline="javascript">
         const csrfToken = /*[[${_csrf.token}]]*/ '';
         const csrfHeader = /*[[${_csrf.headerName}]]*/ '';
-        const usuarioEhGerente = /*[[${#authorization.expression('hasAnyRole(''GERENTE'', ''ADMIN'')')}]]*/ false;
+        const usuarioEhGerente = /*[[${#authorization.expression('hasAnyRole(''GERENTE'')')}]]*/ false;
 
         async function requestAPI(url, method, body = null) {
             const config = { method: method, headers: { [csrfHeader]: csrfToken } };
@@ -204,7 +205,7 @@
             const novoPedidoPayload = {
                 clienteId: cliente,
                 itens: [
-                    { sabor: sabor, quantidade: qtd, precoUnitario: preco }
+                    { sabor: sabor, quantidade: qtd }
                 ]
             };
 

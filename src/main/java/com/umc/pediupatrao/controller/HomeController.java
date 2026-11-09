@@ -39,6 +39,9 @@ public class HomeController {
     
     @Autowired
     private com.umc.pediupatrao.repository.AuditoriaRepository auditoriaRepository;
+    
+    @Autowired
+    private com.umc.pediupatrao.repository.ProdutoRepository produtoRepository;
 
     @GetMapping("/login")
     public String login() {
@@ -125,12 +128,10 @@ public class HomeController {
     // ========================
     @GetMapping("/pedidos")
     public String pedidos(Model model) {
-        List<Pedido> pedidos = pedidoService.listarPedidos();
-        model.addAttribute("pedidos", pedidos);
-        
+        model.addAttribute("pedidos", pedidoService.listarPedidos());
         model.addAttribute("clientes", clienteService.listarClientes());
+        model.addAttribute("produtos", produtoRepository.findAll()); // Envia catálogo oficial
         model.addAttribute("content", "pedidos :: content");
-        log.info("Carregando fragmento: pedidos :: content");
         return "layout";
     }
 
