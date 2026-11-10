@@ -3,6 +3,7 @@ package com.umc.pediupatrao.service;
 import com.umc.pediupatrao.entity.Cliente;
 import com.umc.pediupatrao.repository.ClienteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
@@ -33,6 +34,7 @@ public class ClienteService {
     }
 
     // Método principal que fará a interceptação
+    @Transactional
     public Cliente salvar(Cliente cliente) {
         // 1. É uma INCLUSÃO (Novo Cliente)?
         if (cliente.getId() == null || cliente.getId().trim().isEmpty()) {

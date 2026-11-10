@@ -39,6 +39,9 @@ public class HomeController {
     
     @Autowired
     private com.umc.pediupatrao.repository.AuditoriaRepository auditoriaRepository;
+    
+    @Autowired
+    private com.umc.pediupatrao.repository.ProdutoRepository produtoRepository;
 
     @GetMapping("/login")
     public String login() {
@@ -125,24 +128,10 @@ public class HomeController {
     // ========================
     @GetMapping("/pedidos")
     public String pedidos(Model model) {
-        List<Pedido> pedidos = pedidoService.listarPedidos();
-        model.addAttribute("pedidos", pedidos);
-        
+        model.addAttribute("pedidos", pedidoService.listarPedidos());
         model.addAttribute("clientes", clienteService.listarClientes());
+        model.addAttribute("produtos", produtoRepository.findAll()); // Envia catálogo oficial
         model.addAttribute("content", "pedidos :: content");
-        log.info("Carregando fragmento: pedidos :: content");
-        return "layout";
-    }
-
-    // ========================
-    // PRODUTOS
-    // ========================
-    @GetMapping("/produtos")
-    public String produtos(Model model) {
-        List<Produto> produtos = produtoService.listarProdutos();
-        model.addAttribute("produtos", produtos);
-        model.addAttribute("content", "produtos/lista :: content");
-        log.info("Carregando fragmento: produtos/lista :: content");
         return "layout";
     }
 
@@ -223,6 +212,13 @@ public class HomeController {
     public String telaAuditoria(Model model) {
         model.addAttribute("auditorias", auditoriaRepository.findAll());
         model.addAttribute("content", "auditoria :: content");
+        return "layout";
+    }
+    
+    @GetMapping("/dashboard")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('ADMIN', 'GERENTE')")
+    public String dashboard(Model model) {
+        model.addAttribute("content", "dashboard :: content");
         return "layout";
     }
 }

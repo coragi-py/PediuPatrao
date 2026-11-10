@@ -1,8 +1,11 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
 <head>
     <title>Lista de Pedidos</title>
 </head>
+
 <body>
 
 <div th:fragment="content">
@@ -11,13 +14,19 @@
         <h2 class="fw-bold mb-0">
             <i class="bi bi-bag me-2 text-primary"></i>Pedidos
         </h2>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNovoPedido" sec:authorize="hasAnyRole('ATENDENTE', 'GERENTE')">
+
+        <button class="btn btn-primary"
+                data-bs-toggle="modal"
+                data-bs-target="#modalNovoPedido"
+                sec:authorize="hasAnyRole('ATENDENTE', 'GERENTE')">
             <i class="bi bi-plus-circle me-1"></i> Novo Pedido
         </button>
     </div>
 
     <!-- Mensagens de feedback -->
-    <div class="alert alert-success alert-dismissible fade show" th:if="${sucesso}" role="alert">
+    <div class="alert alert-success alert-dismissible fade show"
+         th:if="${sucesso}"
+         role="alert">
         <i class="bi bi-check-circle-fill me-2"></i>
         <span th:text="${sucesso}"></span>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -39,22 +48,29 @@
                         <th>Ações</th>
                     </tr>
                 </thead>
+
                 <tbody>
                     <tr th:if="${#lists.isEmpty(pedidos)}">
                         <td colspan="8" class="text-center text-muted py-5">
-                            <i class="bi bi-inbox fs-3 d-block mb-2"></i> Nenhum pedido encontrado.
+                            <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                            Nenhum pedido encontrado.
                         </td>
                     </tr>
+
                     <tr th:each="p : ${pedidos}">
                         <td class="ps-4">
                             <span class="text-muted small" th:text="${p.id}"></span><br>
                             <strong th:text="${p.clienteId}"></strong>
                         </td>
+
                         <td>
                             <ul class="list-unstyled mb-0 small" th:if="${p.itens != null}">
-                                <li th:each="item : ${p.itens}" th:text="|${item.sabor} (x${item.quantidade})|"></li>
+                                <li th:each="item : ${p.itens}"
+                                    th:text="|${item.sabor} (x${item.quantidade})|">
+                                </li>
                             </ul>
                         </td>
+
                         <td>
                             <span class="badge"
                                   th:classappend="${p.status == 'FINALIZADO'} ? 'bg-success' :
@@ -64,49 +80,77 @@
                                   th:text="${p.status}">
                             </span>
                         </td>
-                        
-                        <!-- DADOS DE REGISTRO E SAÍDA -->
+
                         <td class="small">
-                            <!-- Entrada -->
                             <div class="mb-1">
-                                <i class="bi bi-box-arrow-in-right text-primary" title="Data de Entrada"></i>
-                                <span class="fw-bold" th:if="${p.dataHoraEntrada != null}" th:text="${#temporals.format(p.dataHoraEntrada, 'dd/MM/yyyy HH:mm')}"></span>
-                                <span class="fw-bold text-muted" th:unless="${p.dataHoraEntrada != null}">-</span>
+                                <i class="bi bi-box-arrow-in-right text-primary"
+                                   title="Data de Entrada"></i>
+
+                                <span class="fw-bold"
+                                      th:if="${p.dataHoraEntrada != null}"
+                                      th:text="${#temporals.format(p.dataHoraEntrada, 'dd/MM/yyyy HH:mm')}">
+                                </span>
+
+                                <span class="fw-bold text-muted"
+                                      th:unless="${p.dataHoraEntrada != null}">
+                                    -
+                                </span>
+
                                 <br>
-                                <span class="text-muted fst-italic" th:if="${p.responsavelRegistro != null}" th:text="|Criado por: ${p.responsavelRegistro}|"></span>
+
+                                <span class="text-muted fst-italic"
+                                      th:if="${p.responsavelRegistro != null}"
+                                      th:text="|Criado por: ${p.responsavelRegistro}|">
+                                </span>
                             </div>
-                            <!-- Saída -->
-                            <div th:if="${p.dataHoraSaida != null}" class="mt-2 border-top pt-1">
-                                <i class="bi bi-box-arrow-right text-success" title="Data de Saída"></i>
-                                <span class="fw-bold" th:text="${#temporals.format(p.dataHoraSaida, 'dd/MM/yyyy HH:mm')}"></span>
+
+                            <div th:if="${p.dataHoraSaida != null}"
+                                 class="mt-2 border-top pt-1">
+                                <i class="bi bi-box-arrow-right text-success"
+                                   title="Data de Saída"></i>
+
+                                <span class="fw-bold"
+                                      th:text="${#temporals.format(p.dataHoraSaida, 'dd/MM/yyyy HH:mm')}">
+                                </span>
+
                                 <br>
-                                <span class="text-muted fst-italic" th:if="${p.responsavelSaida != null}" th:text="|Liberado por: ${p.responsavelSaida}|"></span>
+
+                                <span class="text-muted fst-italic"
+                                      th:if="${p.responsavelSaida != null}"
+                                      th:text="|Liberado por: ${p.responsavelSaida}|">
+                                </span>
                             </div>
                         </td>
 
                         <td th:text="${'R$ ' + #numbers.formatDecimal(((p.valorTotal ?: 0.0) + (p.desconto ?: 0.0)), 1, 'COMMA', 2, 'POINT')}"></td>
-                        <td class="text-danger" th:text="${'R$ ' + #numbers.formatDecimal((p.desconto ?: 0.0), 1, 'COMMA', 2, 'POINT')}"></td>
-                        <td class="fw-bold text-success" th:text="${'R$ ' + #numbers.formatDecimal((p.valorTotal ?: 0.0), 1, 'COMMA', 2, 'POINT')}"></td>
-                        
+
+                        <td class="text-danger"
+                            th:text="${'R$ ' + #numbers.formatDecimal((p.desconto ?: 0.0), 1, 'COMMA', 2, 'POINT')}">
+                        </td>
+
+                        <td class="fw-bold text-success"
+                            th:text="${'R$ ' + #numbers.formatDecimal((p.valorTotal ?: 0.0), 1, 'COMMA', 2, 'POINT')}">
+                        </td>
+
                         <td>
-                            <button class="btn btn-sm btn-success my-1 w-100 text-start" 
-                                    th:data-id="${p.id}" 
-                                    th:data-status="${p.status}" 
-                                    onclick="avancarStatus(this.getAttribute('data-id'), this.getAttribute('data-status'))" 
+                            <button class="btn btn-sm btn-success my-1 w-100 text-start"
+                                    th:data-id="${p.id}"
+                                    th:data-status="${p.status}"
+                                    onclick="avancarStatus(this.getAttribute('data-id'), this.getAttribute('data-status'))"
                                     sec:authorize="hasAnyRole('ATENDENTE', 'GERENTE')">
                                 <i class="bi bi-arrow-right-circle"></i> Avançar
                             </button>
-                            
-                            <button class="btn btn-sm btn-warning my-1 w-100 text-start" 
-                                    th:data-id="${p.id}" 
-                                    onclick="aplicarDesconto(this.getAttribute('data-id'))" 
+
+                            <button class="btn btn-sm btn-warning my-1 w-100 text-start"
+                                    th:data-id="${p.id}"
+                                    onclick="aplicarDesconto(this.getAttribute('data-id'))"
                                     sec:authorize="hasAnyRole('ATENDENTE', 'GERENTE')">
                                 <i class="bi bi-tag"></i> Desconto
                             </button>
-                            
-                            <button class="btn btn-sm btn-danger my-1 w-100 text-start" 
-                                    th:data-id="${p.id}" 
-                                    onclick="cancelarPedido(this.getAttribute('data-id'))" 
+
+                            <button class="btn btn-sm btn-danger my-1 w-100 text-start"
+                                    th:data-id="${p.id}"
+                                    onclick="cancelarPedido(this.getAttribute('data-id'))"
                                     sec:authorize="hasAnyRole('ATENDENTE', 'GERENTE')">
                                 <i class="bi bi-x-circle"></i> Cancelar
                             </button>
@@ -118,149 +162,427 @@
     </div>
 
     <!-- MODAL DE CADASTRO DE NOVO PEDIDO -->
-    <div class="modal fade" id="modalNovoPedido" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header bg-dark text-white">
-            <h5 class="modal-title"><i class="bi bi-cart-plus"></i> Registrar Novo Pedido</h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <form id="formNovoPedido">
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Cliente</label>
-                    <div class="input-group">
-                        <select class="form-select" id="clienteId" required>
-                            <option value="" disabled selected>Selecione um cliente...</option>
-                            <option value="Cliente Balcão (Avulso)" class="fw-bold">🚶 Cliente Balcão (Avulso)</option>
-                            <option th:if="${clientes != null}" th:each="c : ${clientes}" th:value="${c.nome}" th:text="|${c.nome} (${c.telefone})|"></option>
-                        </select>
-                        <a href="/clientes/novo" class="btn btn-outline-secondary" title="Cadastrar Novo Cliente">
-                            <i class="bi bi-person-plus"></i> Novo
-                        </a>
-                    </div>
+    <div class="modal fade"
+         id="modalNovoPedido"
+         tabindex="-1"
+         aria-hidden="true">
+
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-cart-plus"></i> Registrar Novo Pedido
+                    </h5>
+
+                    <button type="button"
+                            class="btn-close btn-close-white"
+                            data-bs-dismiss="modal"
+                            aria-label="Close">
+                    </button>
                 </div>
-                
-                <hr>
-                <h6 class="fw-bold mb-3">Item do Pedido</h6>
-                <div class="mb-3">
-                    <label class="form-label">Sabor / Produto</label>
-                    <input type="text" class="form-control" id="itemSabor" placeholder="Ex: Pizza Calabresa" required>
-                </div>
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Quantidade</label>
-                        <input type="number" class="form-control" id="itemQtd" min="1" value="1" required>
+
+                <div class="modal-body">
+                    <div id="alertaNovoPedido"
+                         class="alert alert-danger d-none"
+                         role="alert">
                     </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Preço Unitário (R$)</label>
-                        <input type="number" step="0.01" class="form-control" id="itemPreco" placeholder="45.00" required>
-                    </div>
+
+                    <form id="formNovoPedido">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Cliente</label>
+
+                            <div class="input-group">
+                                <select class="form-select"
+                                        id="clienteId"
+                                        required>
+                                    <option value="" disabled selected>
+                                        Selecione um cliente...
+                                    </option>
+
+                                    <option value="Cliente Balcão (Avulso)" class="fw-bold">
+                                        🚶 Cliente Balcão (Avulso)
+                                    </option>
+
+                                    <option th:if="${clientes != null}"
+                                            th:each="c : ${clientes}"
+                                            th:value="${c.nome}"
+                                            th:text="|${c.nome} (${c.telefone})|">
+                                    </option>
+                                </select>
+
+                                <a href="/clientes/novo"
+                                   class="btn btn-outline-secondary"
+                                   title="Cadastrar Novo Cliente">
+                                    <i class="bi bi-person-plus"></i> Novo
+                                </a>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <h6 class="fw-bold mb-3">
+                            Itens do Pedido
+                            <span class="text-muted small">
+                                (O preço final é calculado pelo servidor)
+                            </span>
+                        </h6>
+
+                        <div class="row g-2 align-items-end">
+                            <div class="col-md-7">
+                                <label class="form-label" for="itemSabor">
+                                    Produto do catálogo
+                                </label>
+
+                                <select class="form-select"
+                                        id="itemSabor"
+                                        required>
+                                    <option value="" disabled selected>
+                                        Selecione um produto cadastrado...
+                                    </option>
+
+                                    <option th:if="${produtos != null}"
+                                            th:each="prod : ${produtos}"
+                                            th:value="${prod.nome}"
+                                            th:data-preco="${prod.preco}"
+                                            th:text="|${prod.nome} - R$ ${#numbers.formatDecimal(prod.preco, 1, 'COMMA', 2, 'POINT')}|">
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-2">
+                                <label class="form-label" for="itemQtd">
+                                    Quantidade
+                                </label>
+
+                                <input type="number"
+                                       class="form-control"
+                                       id="itemQtd"
+                                       min="1"
+                                       value="1"
+                                       required>
+                            </div>
+
+                            <div class="col-md-3">
+                                <button type="button"
+                                        class="btn btn-outline-primary w-100"
+                                        onclick="adicionarItemAoPedido()">
+                                    <i class="bi bi-plus-lg me-1"></i>
+                                    Adicionar item
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="mt-3">
+                            <h6 class="fw-bold">Itens adicionados</h6>
+
+                            <ul class="list-group"
+                                id="listaItensPedido">
+                                <li class="list-group-item text-muted"
+                                    id="itemVazio">
+                                    Nenhum item adicionado ao pedido.
+                                </li>
+                            </ul>
+
+                            <div class="d-flex justify-content-end mt-3">
+                                <strong>
+                                    Total provisório:
+                                    <span id="totalProvisorio">R$ 0,00</span>
+                                </strong>
+                            </div>
+                        </div>
+                    </form>
                 </div>
-            </form>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-            <button type="button" class="btn btn-primary" onclick="salvarNovoPedido()">Confirmar Pedido</button>
-          </div>
+
+                <div class="modal-footer">
+                    <button type="button"
+                            class="btn btn-secondary"
+                            data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+
+                    <button type="button"
+                            class="btn btn-primary"
+                            onclick="salvarNovoPedido()">
+                        <i class="bi bi-check-circle me-1"></i>
+                        Confirmar Pedido
+                    </button>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
 
     <script th:inline="javascript">
         const csrfToken = /*[[${_csrf.token}]]*/ '';
         const csrfHeader = /*[[${_csrf.headerName}]]*/ '';
-        const usuarioEhGerente = /*[[${#authorization.expression('hasAnyRole(''GERENTE'', ''ADMIN'')')}]]*/ false;
+        const usuarioEhGerente = /*[[${#authorization.expression('hasAnyRole(''GERENTE'')')}]]*/ false;
+
+        let itensTemporarios = [];
+
+        function formatarMoeda(valor) {
+            return valor.toLocaleString('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            });
+        }
+
+        function exibirAlerta(mensagem) {
+            const alerta = document.getElementById('alertaNovoPedido');
+            alerta.textContent = mensagem;
+            alerta.classList.remove('d-none');
+        }
+
+        function limparAlerta() {
+            const alerta = document.getElementById('alertaNovoPedido');
+            alerta.textContent = '';
+            alerta.classList.add('d-none');
+        }
+
+        function adicionarItemAoPedido() {
+            limparAlerta();
+
+            const selectProduto = document.getElementById('itemSabor');
+            const inputQuantidade = document.getElementById('itemQtd');
+
+            const sabor = selectProduto.value;
+            const quantidade = parseInt(inputQuantidade.value);
+
+            if (!sabor) {
+                exibirAlerta('Selecione um produto do catálogo.');
+                return;
+            }
+
+            if (!quantidade || quantidade <= 0) {
+                exibirAlerta('A quantidade deve ser maior que zero.');
+                return;
+            }
+
+            const optionSelecionada = selectProduto.options[selectProduto.selectedIndex];
+            const preco = parseFloat(optionSelecionada.getAttribute('data-preco')) || 0;
+
+            const itemExistente = itensTemporarios.find(item => item.sabor === sabor);
+
+            if (itemExistente) {
+                itemExistente.quantidade += quantidade;
+            } else {
+                itensTemporarios.push({
+                    sabor: sabor,
+                    quantidade: quantidade,
+                    precoUnitario: preco
+                });
+            }
+
+            inputQuantidade.value = 1;
+            selectProduto.selectedIndex = 0;
+
+            renderizarItensTemporarios();
+        }
+
+        function removerItemTemporario(index) {
+            itensTemporarios.splice(index, 1);
+            renderizarItensTemporarios();
+        }
+
+        function renderizarItensTemporarios() {
+            const lista = document.getElementById('listaItensPedido');
+            const itemVazio = document.getElementById('itemVazio');
+
+            lista.innerHTML = '';
+
+            if (itensTemporarios.length === 0) {
+                const li = document.createElement('li');
+                li.className = 'list-group-item text-muted';
+                li.id = 'itemVazio';
+                li.textContent = 'Nenhum item adicionado ao pedido.';
+                lista.appendChild(li);
+
+                document.getElementById('totalProvisorio').textContent = formatarMoeda(0);
+                return;
+            }
+
+            let total = 0;
+
+            itensTemporarios.forEach((item, index) => {
+                const subtotal = item.quantidade * item.precoUnitario;
+                total += subtotal;
+
+                const li = document.createElement('li');
+                li.className = 'list-group-item d-flex justify-content-between align-items-center';
+
+                li.innerHTML = `
+                    <div>
+                        <strong>${item.sabor}</strong><br>
+                        <small class="text-muted">
+                            ${item.quantidade} x ${formatarMoeda(item.precoUnitario)}
+                        </small>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="fw-bold">${formatarMoeda(subtotal)}</span>
+
+                        <button type="button"
+                                class="btn btn-sm btn-outline-danger"
+                                onclick="removerItemTemporario(${index})">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                `;
+
+                lista.appendChild(li);
+            });
+
+            document.getElementById('totalProvisorio').textContent = formatarMoeda(total);
+        }
 
         async function requestAPI(url, method, body = null) {
-            const config = { method: method, headers: { [csrfHeader]: csrfToken } };
+            const config = {
+                method: method,
+                headers: {
+                    [csrfHeader]: csrfToken
+                }
+            };
+
             if (body) {
                 config.headers['Content-Type'] = 'application/json';
                 config.body = JSON.stringify(body);
             }
+
             try {
-                const res = await fetch(url, config);
-                if(res.ok) window.location.reload();
-                else {
-                    const errorData = await res.json().catch(() => ({}));
-                    alert("Erro: " + (errorData.message || "Ação rejeitada pelas regras de negócio."));
+                const resposta = await fetch(url, config);
+
+                if (resposta.ok) {
+                    window.location.reload();
+                    return;
                 }
-            } catch(e) {
-                alert("Falha na comunicação com o servidor.");
+
+                const erro = await resposta.json().catch(() => ({}));
+                exibirAlerta(erro.message || 'A ação foi rejeitada pelas regras de negócio.');
+            } catch (erro) {
+                exibirAlerta('Falha na comunicação com o servidor.');
             }
         }
 
         function salvarNovoPedido() {
-            const cliente = document.getElementById('clienteId').value;
-            const sabor = document.getElementById('itemSabor').value;
-            const qtd = parseInt(document.getElementById('itemQtd').value);
-            const preco = parseFloat(document.getElementById('itemPreco').value);
+            limparAlerta();
 
-            if(!cliente || !sabor || !qtd || !preco) {
-                alert("Por favor, preencha todos os campos do pedido.");
+            const cliente = document.getElementById('clienteId').value;
+
+            if (!cliente) {
+                exibirAlerta('Selecione um cliente.');
+                return;
+            }
+
+            if (itensTemporarios.length === 0) {
+                exibirAlerta('Adicione pelo menos um item ao pedido.');
                 return;
             }
 
             const novoPedidoPayload = {
                 clienteId: cliente,
-                itens: [
-                    { sabor: sabor, quantidade: qtd, precoUnitario: preco }
-                ]
+                itens: itensTemporarios.map(item => ({
+                    sabor: item.sabor,
+                    quantidade: item.quantidade
+                }))
             };
 
             requestAPI('/api/pedidos', 'POST', novoPedidoPayload);
         }
 
         function avancarStatus(id, statusAtual) {
-            let novoStatus = "";
-            if (statusAtual === 'RECEBIDO') novoStatus = 'EM PREPARAÇÃO';
-            else if (statusAtual === 'EM PREPARAÇÃO') novoStatus = 'PRONTO';
-            else if (statusAtual === 'PRONTO') {
-                let opcao = prompt("Digite '1' para SAIU PARA ENTREGA ou '2' para RETIRADO:");
-                if (opcao === '1') novoStatus = 'SAIU PARA ENTREGA';
-                else if (opcao === '2') novoStatus = 'RETIRADO';
-                else return;
-            }
-            else if (statusAtual === 'SAIU PARA ENTREGA' || statusAtual === 'RETIRADO') novoStatus = 'FINALIZADO';
-            else { alert('Pedido concluído ou cancelado não pode ser alterado!'); return; }
+            let novoStatus = '';
 
-            // ADICIONADO: encodeURIComponent para proteger a URL contra os espaços!
-            requestAPI('/api/pedidos/' + id + '/status?status=' + encodeURIComponent(novoStatus), 'PUT');
+            if (statusAtual === 'RECEBIDO') {
+                novoStatus = 'EM PREPARAÇÃO';
+            } else if (statusAtual === 'EM PREPARAÇÃO') {
+                novoStatus = 'PRONTO';
+            } else if (statusAtual === 'PRONTO') {
+                const opcao = prompt(
+                    "Digite '1' para SAIU PARA ENTREGA ou '2' para RETIRADO:"
+                );
+
+                if (opcao === '1') {
+                    novoStatus = 'SAIU PARA ENTREGA';
+                } else if (opcao === '2') {
+                    novoStatus = 'RETIRADO';
+                } else {
+                    return;
+                }
+            } else if (statusAtual === 'SAIU PARA ENTREGA' || statusAtual === 'RETIRADO') {
+                novoStatus = 'FINALIZADO';
+            } else {
+                alert('Pedido concluído ou cancelado não pode ser alterado!');
+                return;
+            }
+
+            requestAPI(
+                '/api/pedidos/' + id + '/status?status=' + encodeURIComponent(novoStatus),
+                'PUT'
+            );
         }
 
         function aplicarDesconto(id) {
-            const perc = prompt("Informe a porcentagem de desconto (máx 20%):");
-            if (!perc) return;
+            const percentual = prompt('Informe a porcentagem de desconto (máx 20%):');
 
-            let url = '/api/pedidos/' + id + '/desconto?percentual=' + perc;
-            if (!usuarioEhGerente) {
-                alert("Esta é uma ação restrita. Chame um GERENTE para autorizar.");
-                const usr = prompt("Autorização - Digite o USUÁRIO do Gerente:");
-                if (!usr) return;
-                const pwd = prompt("Autorização - Digite a SENHA do Gerente:");
-                if (!pwd) return;
-                url += '&usernameGerente=' + encodeURIComponent(usr) + '&senhaGerente=' + encodeURIComponent(pwd);
+            if (!percentual) {
+                return;
             }
+
+            let url = '/api/pedidos/' + id + '/desconto?percentual=' + encodeURIComponent(percentual);
+
+            if (!usuarioEhGerente) {
+                alert('Esta é uma ação restrita. Chame um GERENTE para autorizar.');
+
+                const usuario = prompt('Autorização - Digite o USUÁRIO do Gerente:');
+
+                if (!usuario) {
+                    return;
+                }
+
+                const senha = prompt('Autorização - Digite a SENHA do Gerente:');
+
+                if (!senha) {
+                    return;
+                }
+
+                url += '&usernameGerente=' + encodeURIComponent(usuario);
+                url += '&senhaGerente=' + encodeURIComponent(senha);
+            }
+
             requestAPI(url, 'PUT');
         }
 
         function cancelarPedido(id) {
-            const just = prompt("Informe a justificativa do cancelamento:");
-            if (!just) return;
+            const justificativa = prompt('Informe a justificativa do cancelamento:');
 
-            let url = '/api/pedidos/' + id + '/cancelar?justificativa=' + encodeURIComponent(just);
-            if (!usuarioEhGerente) {
-                alert("Esta é uma ação restrita. Chame um GERENTE para autorizar.");
-                const usr = prompt("Autorização - Digite o USUÁRIO do Gerente:");
-                if (!usr) return;
-                const pwd = prompt("Autorização - Digite a SENHA do Gerente:");
-                if (!pwd) return;
-                url += '&usernameGerente=' + encodeURIComponent(usr) + '&senhaGerente=' + encodeURIComponent(pwd);
+            if (!justificativa) {
+                return;
             }
+
+            let url = '/api/pedidos/' + id + '/cancelar?justificativa=' + encodeURIComponent(justificativa);
+
+            if (!usuarioEhGerente) {
+                alert('Esta é uma ação restrita. Chame um GERENTE para autorizar.');
+
+                const usuario = prompt('Autorização - Digite o USUÁRIO do Gerente:');
+
+                if (!usuario) {
+                    return;
+                }
+
+                const senha = prompt('Autorização - Digite a SENHA do Gerente:');
+
+                if (!senha) {
+                    return;
+                }
+
+                url += '&usernameGerente=' + encodeURIComponent(usuario);
+                url += '&senhaGerente=' + encodeURIComponent(senha);
+            }
+
             requestAPI(url, 'PUT');
         }
     </script>
 </div>
 
 </body>
+
 </html>
