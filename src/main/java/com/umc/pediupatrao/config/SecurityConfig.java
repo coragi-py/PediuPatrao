@@ -17,7 +17,7 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity // Ativa a notação @PreAuthorize para os Controllers
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private final UsuarioDetailsService usuarioDetailsService;
@@ -36,36 +36,49 @@ public class SecurityConfig {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(usuarioDetailsService);
         authProvider.setPasswordEncoder(passwordEncoder());
+
         return authProvider;
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+    public AuthenticationManager authenticationManager(
+            AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login", "/css/**", "/dist/**", "/plugins/**", "/js/**", "/images/**").permitAll()
-                        .requestMatchers("/api/usuarios/**").hasRole("ADMIN") // Dupla autenticação para somente ADMIN conseguir acessar
-                        .requestMatchers("/usuarios", "/usuarios/**").hasRole("ADMIN")
-                        .requestMatchers("/configuracoes", "/configuracoes/**").hasRole("ADMIN")
-                        .anyRequest().authenticated()
-                )
-                .formLogin(form -> form
-                        .loginPage("/login")
-                        .permitAll()
-                        .successHandler(authenticationSuccessHandler())
-                )
-                .logout(logout -> logout
-                    .logoutUrl("/logout")
-                    .logoutSuccessUrl("/login?logout")
-                    .invalidateHttpSession(true)
-                    .deleteCookies("JSESSIONID")
-                    .permitAll()
-                );
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers(
+                        "/login",
+                        "/css/**",
+                        "/dist/**",
+                        "/plugins/**",
+                        "/js/**",
+                        "/images/**"
+                ).permitAll()
+
+                .requestMatchers("/api/usuarios/**").hasRole("ADMIN")
+                .requestMatchers("/usuarios", "/usuarios/**").hasRole("ADMIN")
+                .requestMatchers("/configuracoes", "/configuracoes/**").hasRole("ADMIN")
+
+                .requestMatchers("/produtos", "/produtos/**").hasRole("GERENTE")
+
+                .anyRequest().authenticated()
+            )
+            .formLogin(form -> form
+                .loginPage("/login")
+                .permitAll()
+                .successHandler(authenticationSuccessHandler())
+            )
+            .logout(logout -> logout
+                .logoutUrl("/logout")
+                .logoutSuccessUrl("/login?logout")
+                .invalidateHttpSession(true)
+                .deleteCookies("JSESSIONID")
+                .permitAll()
+            );
 
         return http.build();
     }
@@ -73,7 +86,7 @@ public class SecurityConfig {
     @Bean
     public AuthenticationSuccessHandler authenticationSuccessHandler() {
         return (request, response, authentication) -> {
-            response.sendRedirect("/"); // Redireciona para a página inicial após login bem-sucedido
+            response.sendRedirect("/");
         };
     }
 }

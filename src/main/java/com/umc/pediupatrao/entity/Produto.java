@@ -1,19 +1,31 @@
 package com.umc.pediupatrao.entity;
 
-import jakarta.persistence.Entity;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "produtos")
-@Entity
 public class Produto {
-    
+
     @Id
     private String id;
+
     private String nome;
-    private String tipo; // Pizza, Esfiha, Bebida, Lanche
+
+    private String tipo;
+
     private Double preco;
+
     private Boolean ativo;
+
+    public Produto() {
+    }
+
+    public Produto(String nome, String tipo, Double preco, Boolean ativo) {
+        this.nome = nome;
+        this.tipo = tipo;
+        this.preco = preco;
+        this.ativo = ativo;
+    }
 
     public String getId() {
         return id;
@@ -54,6 +66,4 @@ public class Produto {
     public void setAtivo(Boolean ativo) {
         this.ativo = ativo;
     }
-    
-    
 }
