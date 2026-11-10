@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Dashboard Administrativo</title>
+</head>
+<body>
+
+<div th:fragment="content">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Cabeçalho e Botão de Atualização (RF07) -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-0">
+                <i class="bi bi-graph-up-arrow me-2 text-primary"></i>Dashboard Administrativo
+            </h2>
+            <small class="text-muted" id="ultimaAtualizacao">Sincronizando dados...</small>
+        </div>
+        <button class="btn btn-outline-primary" onclick="carregarDashboard()">
+            <i class="bi bi-arrow-clockwise me-1"></i> Atualizar Dados
+        </button>
+    </div>
+
+    <!-- Alerta de Erro de Comunicação / Validação (RF07) -->
+    <div id="alertaErroDashboard" class="alert alert-danger d-none" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <span id="msgErroDashboard"></span>
+    </div>
+
+    <!-- Barra de Filtros de Consulta (RF05) -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label fw-bold small">Data Inicial</label>
+                    <input type="date" id="filtroDataInicio" class="form-control">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold small">Data Final</label>
+                    <input type="date" id="filtroDataFim" class="form-control">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold small">Status do Pedido</label>
+                    <select id="filtroStatus" class="form-select">
+                        <option value="TODOS">Todos os Status</option>
+                        <option value="RECEBIDO">RECEBIDO</option>
+                        <option value="EM PREPARAÇÃO">EM PREPARAÇÃO</option>
+                        <option value="PRONTO">PRONTO</option>
+                        <option value="SAIU PARA ENTREGA">SAIU PARA ENTREGA</option>
+                        <option value="RETIRADO">RETIRADO</option>
+                        <option value="FINALIZADO">FINALIZADO</option>
+                        <option value="CANCELADO">CANCELADO</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex gap-2">
+                    <button class="btn btn-primary w-100" onclick="carregarDashboard()">
+                        <i class="bi bi-funnel-fill me-1"></i> Filtrar
+                    </button>
+                    <button class="btn btn-outline-secondary" onclick="limparFiltros()" title="Limpar Filtros">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Indicadores Gerais de Vendas - KPIs (RF01) -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card shadow-sm border-start border-success border-4 h-100">
+                <div class="card-body">
+                    <div class="text-muted small text-uppercase fw-bold">Faturamento Líquido</div>
+                    <h3 class="fw-bold text-success mt-2 mb-0" id="kpiFaturamento">R$ 0,00</h3>
+                    <small class="text-muted" id="kpiDescontos">Descontos: R$ 0,00</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-start border-primary border-4 h-100">
+                <div class="card-body">
+                    <div class="text-muted small text-uppercase fw-bold">Total de Pedidos</div>
+                    <h3 class="fw-bold text-primary mt-2 mb-0" id="kpiTotalPedidos">0</h3>
+                    <small class="text-muted" id="kpiPedidosValidos">0 válidos</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-start border-info border-4 h-100">
+                <div class="card-body">
+                    <div class="text-muted small text-uppercase fw-bold">Ticket Médio</div>
+                    <h3 class="fw-bold text-info mt-2 mb-0" id="kpiTicketMedio">R$ 0,00</h3>
+                    <small class="text-muted">Por pedido válido</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-start border-danger border-4 h-100">
+                <div class="card-body">
+                    <div class="text-muted small text-uppercase fw-bold">Taxa de Cancelamento</div>
+                    <h3 class="fw-bold text-danger mt-2 mb-0" id="kpiTaxaCancelamento">0%</h3>
+                    <small class="text-muted" id="kpiCanceladosQtd">0 cancelados</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos: Evolução de Vendas (RF02) e Situação dos Pedidos (RF03) -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-8">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white fw-bold">
+                    <i class="bi bi-bar-chart-line me-1 text-primary"></i> Evolução de Faturamento e Volume de Vendas
+                </div>
+                <div class="card-body">
+                    <canvas id="graficoVendasPeriodo" height="120"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white fw-bold">
+                    <i class="bi bi-pie-chart me-1 text-primary"></i> Situação dos Pedidos
+                </div>
+                <div class="card-body d-flex flex-column justify-content-center">
+                    <canvas id="graficoStatusPedidos" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ranking de Produtos Mais Vendidos (RF04) e Tabela de Status (RF03) -->
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white fw-bold">
+                    <i class="bi bi-trophy me-1 text-warning"></i> Top 5 Produtos Mais Vendidos
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-3">#</th>
+                                <th>Produto / Sabor</th>
+                                <th class="text-center">Qtd. Vendida</th>
+                                <th class="text-end pe-3">Receita Bruta</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaTopProdutos">
+                            <tr><td colspan="4" class="text-center py-4 text-muted">Carregando...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white fw-bold">
+                    <i class="bi bi-list-check me-1 text-success"></i> Detalhamento por Situação
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-3">Status</th>
+                                <th class="text-center">Pedidos</th>
+                                <th class="text-end pe-3">% do Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaStatusPedidos">
+                            <tr><td colspan="3" class="text-center py-4 text-muted">Carregando...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let chartVendas = null;
+        let chartStatus = null;
+
+        function formatarMoeda(valor) {
+            return Number(valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+
+        function limparFiltros() {
+            document.getElementById('filtroDataInicio').value = '';
+            document.getElementById('filtroDataFim').value = '';
+            document.getElementById('filtroStatus').value = 'TODOS';
+            carregarDashboard();
+        }
+
+        async function carregarDashboard() {
+            const alertaErro = document.getElementById('alertaErroDashboard');
+            alertaErro.classList.add('d-none');
+
+            const dataInicio = document.getElementById('filtroDataInicio').value;
+            const dataFim = document.getElementById('filtroDataFim').value;
+            const status = document.getElementById('filtroStatus').value;
+
+            if (dataInicio && dataFim && dataInicio > dataFim) {
+                document.getElementById('msgErroDashboard').innerText = 'A Data Inicial não pode ser maior que a Data Final.';
+                alertaErro.classList.remove('d-none');
+                return;
+            }
+
+            const params = new URLSearchParams();
+            if (dataInicio) params.append('dataInicio', dataInicio);
+            if (dataFim) params.append('dataFim', dataFim);
+            if (status && status !== 'TODOS') params.append('status', status);
+
+            const queryString = params.toString() ? `?${params.toString()}` : '';
+
+            try {
+                const [resInd, resVendas, resStatus, resProd] = await Promise.all([
+                    fetch(`/api/dashboard/indicadores${queryString}`),
+                    fetch(`/api/dashboard/vendas-periodo${queryString}`),
+                    fetch(`/api/dashboard/status-pedidos${queryString}`),
+                    fetch(`/api/dashboard/produtos-mais-vendidos${queryString}`)
+                ]);
+
+                if (!resInd.ok || !resVendas.ok || !resStatus.ok || !resProd.ok) {
+                    throw new Error('Falha ao consultar os endpoints da API do Dashboard.');
+                }
+
+                const indicadores = await resInd.json();
+                const vendasPeriodo = await resVendas.json();
+                const statusPedidos = await resStatus.json();
+                const topProdutos = await resProd.json();
+
+                renderizarKPIs(indicadores);
+                renderizarGraficoVendas(vendasPeriodo);
+                renderizarStatus(statusPedidos);
+                renderizarTopProdutos(topProdutos);
+
+                const agora = new Date().toLocaleTimeString('pt-BR');
+                document.getElementById('ultimaAtualizacao').innerText = `Última atualização: ${agora}`;
+            } catch (err) {
+                document.getElementById('msgErroDashboard').innerText = err.message || 'Erro de comunicação com a API.';
+                alertaErro.classList.remove('d-none');
+            }
+        }
+
+        function renderizarKPIs(ind) {
+            document.getElementById('kpiFaturamento').innerText = formatarMoeda(ind.faturamentoTotal);
+            document.getElementById('kpiDescontos').innerText = `Descontos concedidos: ${formatarMoeda(ind.totalDescontos)}`;
+            document.getElementById('kpiTotalPedidos').innerText = ind.totalPedidos;
+            document.getElementById('kpiPedidosValidos').innerText = `${ind.pedidosValidos} pedido(s) válido(s)`;
+            document.getElementById('kpiTicketMedio').innerText = formatarMoeda(ind.ticketMedio);
+            document.getElementById('kpiTaxaCancelamento').innerText = `${ind.taxaCancelamentoPercentual}%`;
+            document.getElementById('kpiCanceladosQtd').innerText = `${ind.pedidosCancelados} cancelado(s)`;
+        }
+
+        function renderizarGraficoVendas(dados) {
+            const ctx = document.getElementById('graficoVendasPeriodo').getContext('2d');
+            if (chartVendas) chartVendas.destroy();
+
+            const labels = dados.map(d => d.data);
+            const faturamentos = dados.map(d => d.faturamento);
+            const quantidades = dados.map(d => d.quantidadePedidos);
+
+            chartVendas = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels.length ? labels : ['Sem vendas no período'],
+                    datasets: [
+                        {
+                            label: 'Faturamento (R$)',
+                            data: faturamentos.length ? faturamentos : [0],
+                            backgroundColor: 'rgba(25, 135, 84, 0.7)',
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Qtd. Pedidos',
+                            data: quantidades.length ? quantidades : [0],
+                            type: 'line',
+                            borderColor: '#0d6efd',
+                            backgroundColor: '#0d6efd',
+                            tension: 0.3,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { type: 'linear', position: 'left', beginAtZero: true },
+                        y1: { type: 'linear', position: 'right', beginAtZero: true, grid: { drawOnChartArea: false } }
+                    }
+                }
+            });
+        }
+
+        function renderizarStatus(listaStatus) {
+            const tbody = document.getElementById('tabelaStatusPedidos');
+            tbody.innerHTML = '';
+
+            listaStatus.forEach(item => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="ps-3 fw-semibold">${item.status}</td>
+                        <td class="text-center">${item.quantidade}</td>
+                        <td class="text-end pe-3">${item.percentual}%</td>
+                    </tr>
+                `;
+            });
+
+            const ctx = document.getElementById('graficoStatusPedidos').getContext('2d');
+            if (chartStatus) chartStatus.destroy();
+
+            const ativos = listaStatus.filter(i => i.quantidade > 0);
+            chartStatus = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ativos.length ? ativos.map(i => i.status) : ['Sem Pedidos'],
+                    datasets: [{
+                        data: ativos.length ? ativos.map(i => i.quantidade) : [1],
+                        backgroundColor: ['#0d6efd', '#ffc107', '#0dcaf0', '#6f42c1', '#20c997', '#198754', '#dc3545']
+                    }]
+                }
+            });
+        }
+
+        function renderizarTopProdutos(produtos) {
+            const tbody = document.getElementById('tabelaTopProdutos');
+            if (!produtos || produtos.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">Nenhum produto vendido para os filtros selecionados.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = produtos.map((p, idx) => `
+                <tr>
+                    <td class="ps-3 fw-bold">${idx + 1}º</td>
+                    <td>${p.produto}</td>
+                    <td class="text-center"><span class="badge bg-primary">${p.quantidadeVendida} un.</span></td>
+                    <td class="text-end pe-3 fw-bold text-success">${formatarMoeda(p.receitaGerada)}</td>
+                </tr>
+            `).join('');
+        }
+
+        document.addEventListener('DOMContentLoaded', carregarDashboard);
+    </script>
+</div>
+
+</body>
+</html>

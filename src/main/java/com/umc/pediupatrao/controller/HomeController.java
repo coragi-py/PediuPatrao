@@ -226,4 +226,11 @@ public class HomeController {
         model.addAttribute("content", "auditoria :: content");
         return "layout";
     }
+    
+    @GetMapping("/dashboard")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('ADMIN', 'GERENTE')")
+    public String dashboard(Model model) {
+        model.addAttribute("content", "dashboard :: content");
+        return "layout";
+    }
 }
